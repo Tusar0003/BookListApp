@@ -37,7 +37,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
         String title = currentBook.getTitle();
         String author = currentBook.getAuthor();
 
-        Log.d("***NOTICE***", "Title: " + title + ", Author: " + author + "\n");
+//        Log.d("***NOTICE***", "Title: " + title + ", Author: " + author + "\n");
 
         titleTextView.setText(title);
         authorTextView.setText(author);

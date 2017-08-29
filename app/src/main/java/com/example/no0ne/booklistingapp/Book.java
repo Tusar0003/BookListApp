@@ -7,12 +7,12 @@ public class Book {
 
     private String mTitle;
     private String mAuthor;
+    private String mUrl;
 
-    public Book(String title, String author) {
-//        Log.d("***NOTICE***", "Book() is called");
-
+    public Book(String title, String author, String url) {
         mTitle = title;
         mAuthor = author;
+        mUrl = url;
 //        Log.d("***NOTICE***", "Title: " + title + ", Author: " + author + "\n");
     }
 
@@ -22,5 +22,9 @@ public class Book {
 
     public String getAuthor() {
         return mAuthor;
+    }
+
+    public String getUrl() {
+        return mUrl;
     }
 }

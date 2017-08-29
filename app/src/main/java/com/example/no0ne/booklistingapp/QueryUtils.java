@@ -40,24 +40,27 @@ public class QueryUtils {
 
             for (int i = 0; i< bookArray.length(); i++) {
                 JSONObject currentBook = bookArray.getJSONObject(i);
-                JSONObject volume = currentBook.getJSONObject("volumeInfo");
+                JSONObject volumeInfo = currentBook.getJSONObject("volumeInfo");
 
-                String title = volume.getString("title");
-//                String author = volume.getString("authors");
+                String title = volumeInfo.getString("title");
+//                String author = volumeInfo.getString("authors");
 
-                JSONArray authors = volume.getJSONArray("authors");
+                JSONArray authors = volumeInfo.getJSONArray("authors");
                 String author = authors.getString(0);
 
-                Log.d("***NOTICE***", "Title: " + title + ", Author: " + author + "\n");
+//                Log.d("***NOTICE***", "Title: " + title + ", Author: " + author + "\n");
 
-                Book book = new Book(title, author);
+                JSONObject accessInfo = currentBook.getJSONObject("accessInfo");
+                String url = accessInfo.getString("webReaderLink");
+
+                Book book = new Book(title, author, url);
                 books.add(book);
             }
         } catch (JSONException e) {
             Log.e("QueryUtils", "Problem parsing the book JSON results", e);
         }
 
-        return null;
+        return books;
     }
 
     public static List<Book> fetchEarthquakeData(String requestUrl) {
