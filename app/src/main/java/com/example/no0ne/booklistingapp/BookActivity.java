@@ -1,26 +1,27 @@
 package com.example.no0ne.booklistingapp;
 
-import android.app.LoaderManager;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.Loader;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BookActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Book>> {
+public class BookActivity extends AppCompatActivity {
 
     private static final int BOOK_LOADER_ID = 1;
 
@@ -32,7 +33,6 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private BookAdapter mAdapter;
 
-//    private String search;
     private String BOOK_REQUEST_URL;
 
     @Override
@@ -45,67 +45,83 @@ public class BookActivity extends AppCompatActivity implements LoaderManager.Loa
         bookListView = (ListView) findViewById(R.id.list);
         mEmptyTextView = (TextView) findViewById(R.id.empty_view);
 
+        bookListView.setEmptyView(mEmptyTextView);
+        mAdapter = new BookAdapter(BookActivity.this, new ArrayList<Book>());
+
+        bookListView.setAdapter(mAdapter);
+        bookListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Book currentBook = mAdapter.getItem(position);
+                Uri bookUri = Uri.parse(currentBook.getUrl());
+                Intent websiteIntent = new Intent(Intent.ACTION_VIEW, bookUri);
+                startActivity(websiteIntent);
+            }
+        });
+
         mSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 String search = String.valueOf(mSearchEditText.getText());
                 BOOK_REQUEST_URL = "https://www.googleapis.com/books/v1/volumes?q=" + search + "&maxResults=10";
 
-                bookListView.setEmptyView(mEmptyTextView);
-                mAdapter = new BookAdapter(BookActivity.this, new ArrayList<Book>());
+                InputMethodManager methodManager = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+                methodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
 
-                bookListView.setAdapter(mAdapter);
-                bookListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Book currentBook = mAdapter.getItem(position);
-                        Uri bookUri = Uri.parse(currentBook.getUrl());
-                        Intent websiteIntent = new Intent(Intent.ACTION_VIEW, bookUri);
-                        startActivity(websiteIntent);
-                    }
-                });
-
-                ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-                NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-                boolean isConnected = networkInfo != null && networkInfo.isConnectedOrConnecting();
-
-                if (isConnected) {
-                    LoaderManager loaderManager = getLoaderManager();
-                    loaderManager.initLoader(BOOK_LOADER_ID, null, BookActivity.this);
-                } else {
-                    loadingIndicator = findViewById(R.id.loading_indicator);
-                    loadingIndicator.setVisibility(View.GONE);
-
-                    mEmptyTextView.setText(R.string.no_internet_connection);
-                }
+                BookAsyncTask task = new BookAsyncTask();
+                task.execute(BOOK_REQUEST_URL);
             }
         });
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+        boolean isConnected = networkInfo != null && networkInfo.isConnectedOrConnecting();
+
+        if (isConnected) {
+            loadingIndicator = findViewById(R.id.loading_indicator);
+            loadingIndicator.setVisibility(View.GONE);
+
+            Toast.makeText(this, "Successfully Connected to the Internet", Toast.LENGTH_SHORT).show();
+        } else {
+            loadingIndicator = findViewById(R.id.loading_indicator);
+            loadingIndicator.setVisibility(View.GONE);
+
+            mEmptyTextView.setText(R.string.no_internet_connection);
+        }
     }
 
-    @Override
-    public Loader<List<Book>> onCreateLoader(int id, Bundle args) {
-        Log.d("***NOTICE***", "onCreateLoader() is called");
-        return new BookLoader(this, BOOK_REQUEST_URL);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<List<Book>> loader, List<Book> books) {
-        Log.d("***NOTICE***", "onLoadFinished() is called");
+    private void updateUi(List<Book> books) {
+        if (books == null && books.isEmpty()) {
+            mEmptyTextView.setText(R.string.no_data);
+        }
 
         loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
 
-        mEmptyTextView.setText(R.string.no_data);
-
         mAdapter.clear();
-
-        if (books != null && !books.isEmpty()) {
-            mAdapter.addAll(books);
-        }
+        mAdapter.addAll(books);
     }
 
-    @Override
-    public void onLoaderReset(Loader<List<Book>> loader) {
-        mAdapter.clear();
+    private class BookAsyncTask extends AsyncTask<String, Void, List<Book>> {
+
+        @Override
+        protected List<Book> doInBackground(String... urls) {
+            if (urls.length < 1 || urls[0] == null) {
+                return null;
+            }
+
+            List<Book> books = QueryUtils.fetchEarthquakeData(urls[0]);
+
+            return books;
+        }
+
+        @Override
+        protected void onPostExecute(List<Book> books) {
+            if (books == null) {
+                return;
+            }
+
+            updateUi(books);
+        }
     }
 }

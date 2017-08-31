@@ -37,9 +37,14 @@ public class BookAdapter extends ArrayAdapter<Book> {
         String title = currentBook.getTitle();
         String author = currentBook.getAuthor();
 
-//        Log.d("***NOTICE***", "Title: " + title + ", Author: " + author + "\n");
-
+        if (title == null) {
+            titleTextView.setText("No title found for the book!");
+        }
         titleTextView.setText(title);
+
+        if (author == null) {
+            authorTextView.setText("No author found for the book!");
+        }
         authorTextView.setText(author);
 
         return listItemView;
