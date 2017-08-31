@@ -23,8 +23,6 @@ import java.util.List;
 
 public class BookActivity extends AppCompatActivity {
 
-    private static final int BOOK_LOADER_ID = 1;
-
     private EditText mSearchEditText;
     private Button mSearchButton;
     private TextView mEmptyTextView;
