@@ -24,7 +24,8 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/edit_text_search"
             android:layout_alignParentRight="true"
-            android:background="@color/colorAccent"
+            android:background="@color/colorPrimary"
+            android:textColor="@android:color/white"
             android:text="@string/button_name" />
     </RelativeLayout>
 
